@@ -1,7 +1,9 @@
 package com.omzy.webwatchservice.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Bean;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -10,11 +12,15 @@ import java.net.URL;
 
 @Slf4j
 @Service
+@EnableScheduling
 public class WebWatchService {
 
-    @Bean
+    @Value("${website.url}")
+    public String URL;
+
+    @Scheduled(cron = "0 */30 * * * *")
     void TestFunction(){
-        pingUrl("https://www.test.com/");
+        pingUrl(URL);
     }
 
     public void pingUrl(String url) {
