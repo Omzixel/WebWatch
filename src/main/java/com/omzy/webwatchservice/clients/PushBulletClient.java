@@ -1,25 +1,28 @@
-package com.omzy.webwatchservice.service;
+package com.omzy.webwatchservice.clients;
 
-import org.springframework.context.annotation.Bean;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @Service
-public class PushBulletService {
+public class PushBulletClient {
 
-    //TODO fix variables (ENV), implemente better logging and make TESTS
-    private static final String PUSHBULLET_API_URL = "url";
-    private static final String ACCESS_TOKEN = "token";
+    @Value("${pushbullet.token}")
+    public String pushBulletToken;
+
+    @Value("${pushbullet.url}")
+    public String pushBulletUrl;
 
     private final WebClient webClient;
 
-    public PushBulletService(WebClient.Builder webClientBuilder) {
-        this.webClient = webClientBuilder.baseUrl(PUSHBULLET_API_URL).build();
+    public PushBulletClient(WebClient.Builder webClientBuilder) {
+        this.webClient = webClientBuilder.baseUrl(pushBulletUrl).build();
     }
 
     public void sendNotification(String title, String message) {
@@ -29,15 +32,15 @@ public class PushBulletService {
         body.put("body", message);
 
         webClient.post()
-                .header("Authorization", "Bearer " + ACCESS_TOKEN)
+                .header("Authorization", "Bearer " + pushBulletToken)
                 .header("Content-Type", "application/json")
                 .bodyValue(body)
                 .retrieve()
                 .bodyToMono(String.class)
                 .doOnError(WebClientResponseException.class, ex -> {
-                    System.err.println("Error response from Pushbullet: " + ex.getResponseBodyAsString());
+                    log.error("Error response from Pushbullet: " + ex.getResponseBodyAsString());
                 })
-                .subscribe(response -> System.out.println("Pushbullet Response: " + response));
+                .subscribe(response -> log.info("Pushbullet Response: " + response));
     }
 
 }
