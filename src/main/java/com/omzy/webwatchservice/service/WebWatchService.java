@@ -1,6 +1,8 @@
 package com.omzy.webwatchservice.service;
 
+import com.omzy.webwatchservice.clients.PushBulletClient;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -18,12 +20,23 @@ public class WebWatchService {
     @Value("${website.url}")
     public String URL;
 
-    @Scheduled(cron = "0 */30 * * * *")
-    void TestFunction(){
-        pingUrl(URL);
+    @Autowired
+    private final PushBulletClient pushBulletClient;
+
+    public WebWatchService(PushBulletClient pushBulletClient) {
+        this.pushBulletClient = pushBulletClient;
     }
 
-    public void pingUrl(String url) {
+    @Scheduled(cron = "0 */30 * * * *")
+    void pingWebSiteJob() {
+        boolean isUp = pingUrl(URL);
+
+        if (!isUp) {
+            pushBulletClient.sendNotification("Website Status Alert", "The website is currently unreachable.");
+        }
+    }
+
+    public boolean pingUrl(String url) {
         try {
             HttpURLConnection connection = createConnection(url);
             connection.setRequestMethod("GET");
@@ -32,13 +45,15 @@ public class WebWatchService {
 
             int responseCode = connection.getResponseCode();
 
-            if (responseCode == 200) {
-                log.info("UP");
+            if (responseCode != 200) {
+                log.info("Website is unreachable");
+                return false;
             } else {
-                log.info("DOWN");
+                return true;
             }
         } catch (IOException e) {
-            log.info("Error pinging site");
+            log.error("Error pinging site");
+            return false;
         }
     }
 

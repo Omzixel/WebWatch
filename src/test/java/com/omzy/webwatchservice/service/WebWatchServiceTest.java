@@ -1,4 +1,5 @@
 package com.omzy.webwatchservice.service;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,7 +12,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.HttpURLConnection;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
@@ -43,10 +45,10 @@ class WebWatchServiceTest {
         doReturn(mockConnection).when(urlPingService).createConnection(anyString());
 
         // When
-        urlPingService.pingUrl("http://example.com");
+        boolean result = urlPingService.pingUrl("http://example.com");
 
         // Then
-        assertTrue(outContent.toString().contains("UP"));
+        assertTrue(result);
     }
 
     @Test
@@ -56,10 +58,10 @@ class WebWatchServiceTest {
         doReturn(mockConnection).when(urlPingService).createConnection(anyString());
 
         // When
-        urlPingService.pingUrl("http://example.com");
+        boolean result = urlPingService.pingUrl("http://example.com");
 
         // Then
-        assertTrue(outContent.toString().contains("DOWN"));
+        assertFalse(result);
     }
 
     @Test
