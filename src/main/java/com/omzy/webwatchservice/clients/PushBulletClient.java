@@ -1,5 +1,6 @@
 package com.omzy.webwatchservice.clients;
 
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -19,10 +20,13 @@ public class PushBulletClient {
     @Value("${pushbullet.url}")
     public String pushBulletUrl;
 
-    private final WebClient webClient;
+    private WebClient webClient;
 
-    public PushBulletClient(WebClient.Builder webClientBuilder) {
-        this.webClient = webClientBuilder.baseUrl(pushBulletUrl).build();
+    @PostConstruct
+    public void init() {
+        this.webClient = WebClient.builder()
+                .baseUrl(pushBulletUrl)
+                .build();
     }
 
     public void sendNotification(String title, String message) {
@@ -40,7 +44,7 @@ public class PushBulletClient {
                 .doOnError(WebClientResponseException.class, ex -> {
                     log.error("Error response from Pushbullet: " + ex.getResponseBodyAsString());
                 })
-                .subscribe(response -> log.info("Pushbullet Response: " + response));
+                .block();
     }
 
 }
